@@ -4,6 +4,8 @@ function [BSP_Info] = BSP_ID()
 % Name of BSP
 BSP_Info.Name = 'ArduPilot';
 
+BSP_Info.Version = '001';
+
 % Data import function name
 BSP_Info.importFcn = {'ArduPilot mat file','import_APM'};
 
