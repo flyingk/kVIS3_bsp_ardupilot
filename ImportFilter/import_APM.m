@@ -56,15 +56,6 @@ fds.BoardSupportPackage = 'ArduPilot';
 %% read data
 data_stream_names = fieldnames(log);
 
-fds.fdata{ 2,1} = 'varNames';
-fds.fdata{ 3,1} = 'varUnits';
-fds.fdata{ 4,1} = 'varFrames';
-fds.fdata{ 5,1} = 'varNamesDisp';
-fds.fdata{ 6,1} = 'varLabelsTeX';
-fds.fdata{ 7,1} = 'data';
-fds.fdata{ 8,1} = 'treeParent';
-fds.fdata{ 9,1} = 'treeGroupExpanded';
-fds.fdata{10,1} = 'treeGroupSelected';
 
 for ii = 1:numel(data_stream_names) % change to a 1 later
     
@@ -120,52 +111,43 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             multipliers_data = data.('fieldMultipliers');
             data = rmfield(data,'fieldMultipliers');
             
-            % Add a new column to fds.fdata for our new data
-            fds.fdata = [fds.fdata, cell(size(fds.fdata,1),1)];
-            idx_data = size(fds.fdata,2);
-            
+     
             % Create name for new struct (group name)
-            fds.fdata( 1,idx_data) = {data.('name')};
+            groupName = data.('name');
             data = rmfield(data,'name');
             
             % Get number of fields
             channel_names = fieldnames(data);
             n_channels = numel(channel_names);
             
-            % Group parent in tree
-            fds.fdata( 8,idx_data) = {1};
-            
-            % Group node expanded
-            fds.fdata( 9,idx_data) = {0};
-            
-            % Group node selected
-            fds.fdata(10,idx_data) = {1};
-            
             % List of channel names
-            fds.fdata{ 2,idx_data} = fieldnames(data); % reference name
-            fds.fdata{ 5,idx_data} = fieldnames(data); % display name
-            fds.fdata{ 6,idx_data} = fieldnames(data); % tex name
+            varNames = fieldnames(data); % reference name
+%             fds.fdata{ 5,idx_data} = fieldnames(data); % display name
+%             fds.fdata{ 6,idx_data} = fieldnames(data); % tex name
 
             
             % List of channel units
             if (isempty(fieldnames(units_data)))
-                fds.fdata{ 3,idx_data} = repmat({'N/A'},n_channels,1);
+                varUnits = repmat({'N/A'},n_channels,1);
             else
                 keyboard
             end
             
             % Reference frame of channel
-            fds.fdata{ 4,idx_data} = repmat({'Unknown Frame'},n_channels,1);
+            varFrames = repmat({'Unknown Frame'},n_channels,1);
             
-            % Fill in the data
-            fds.fdata{ 7,idx_data} = nan(n_points,n_channels);
-
+            
+            DAT=[];
+            
             for jj = 1:n_channels
                 channel_data = data.(channel_names{jj});
                 
                 % Add to fds.fdata
-                fds.fdata{ 7,idx_data}(:,jj) = channel_data;   
+                DAT(:,jj) = channel_data;   
             end
+            
+            fds = kVIS_fdsAddTreeLeaf(fds, groupName, varNames, varNames, varUnits, varFrames, DAT, parentNode, false);
+            
         end
     end
 end
