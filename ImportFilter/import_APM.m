@@ -21,7 +21,7 @@
 function [] = import_APM(hObject, ~)
 
 % UAVmainframe v5 file
-[file, pathname] = uigetfile('*.bin');
+[file, pathname] = uigetfile('*.BIN');
 
 % Constants
 RTD = 180.0/pi;

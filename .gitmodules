@@ -1,4 +1,3 @@
-[submodule "ardupilog"]
-	path = ardupilog
+[submodule "ImportFilter/apm_converter"]
+	path = ImportFilter/apm_converter
 	url = https://github.com/Georacer/ardupilog.git
-
