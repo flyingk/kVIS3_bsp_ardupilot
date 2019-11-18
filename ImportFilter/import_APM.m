@@ -148,76 +148,27 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
                 DAT(:,jj) = channel_data;
             end
             
+            t_start = min(t_start,DAT(1,1));
+            
+            
+            % Add a new leaf to the tree
             fds = kVIS_fdsAddTreeLeaf(fds, groupName, varNames, varNames, varUnits, varFrames, DAT, parentNode, false);
             
         end
     end
 end
 
-% Sort everything alphabetically
-% Otherwise everything else is just random @_@
+% Sort the fdata fields alphabetically
+[~,idx] = sort(fds.fdata(1,2:end));
+fds.fdata(:,2:end) = fds.fdata(:,idx+1);
 
+% Fix up the time so starts at t = 0
+fds.timeOffset = t_start;
+for ii = 2:numel(fds.fdata(1,:))
+    fds.fdata{7,2}(:,1) = fds.fdata{7,2}(:,1) - fds.timeOffset;
+end
 
-%
-% % Fix up the time so starts at t = 0
-% for ii = 3:size(file_data,2)
-%     file_data{2,ii}(:,1) = file_data{2,ii}(:,1) - t_start;  % Start at t = 0
-% end
-%
-% % Use a common time step (maybe)
-%
-% % Get user to fill in additional required fields
-% prompt = { 'Version:', ...
-%     'Activity:', ...
-%     'Date:', ...
-%     'Time:', ...
-%     'Aircraft:', ...
-%     'Pilot:', ...
-%     'Sref:', ...
-%     'cref:', ...
-%     'bref:', ...
-%     'mass:', ...
-%     'Ixx:', ...
-%     'Iyy:', ...
-%     'Izz:', ...
-%     'Comment:'  };
-% title = 'APM Data';
-% dims = [1 35];
-% definput = {'APM:Plane', ...
-%     'Testing', ...
-%     date, ...
-%     '12:00:00', ...
-%     'Mini-Skywalker', ...
-%     'Jag + Matt',...
-%     '1', ...
-%     '1', ...
-%     '1', ...
-%     '1', ...
-%     '1', ...
-%     '1', ...
-%     '1', ...
-%     ''   };
-% answer = inputdlg(prompt,title,dims,definput);
-%
-% % Fill out fds data
-% fds = evalin('base','fds');
-%
-% fds.aircraft  = answer{ 5};
-% fds.ver       = answer{ 1};
-% fds.maneuver  = answer{ 2};
-% fds.test_date = [answer{ 3},' ',answer{ 4}];
-% fds.pilot     = answer{ 6};
-% fds.comment   = answer{14};
-%
-% % Fill out config data (h)
-% h.sref     = answer{ 7};
-% h.cref     = answer{ 8};
-% h.bref     = answer{ 9};
-% h.mass     = answer{10};
-% h.ixx      = answer{11};
-% h.iyy      = answer{12};
-% h.izz      = answer{13};
-%
+% All done!
 fprintf('\nImport took %.2f s\n',toc);
 
 return
