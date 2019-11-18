@@ -18,10 +18,9 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-function [] = import_APM(hObject, ~)
+function fds = import_APM(file)
 
-% UAVmainframe v5 file
-[file, pathname] = uigetfile('*.BIN');
+debug = 1;
 
 % Constants
 RTD = 180.0/pi;
@@ -31,10 +30,7 @@ t_start = inf;
 if file==0
     disp('Error loading file.')
     return
-else
-    file = fullfile(pathname,file);
 end
-
 
 tic
 
@@ -75,19 +71,20 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             ...
             strcmp(field_name,'FMT') || ...
             strcmp(field_name,'FMTU') || ...
+            strcmp(field_name,'UNIT') || ...
             strcmp(field_name,'MSG') || ...
             strcmp(field_name,'PARM') || ...
             ...
             isempty(field_name) )
         
         % skip these
-        fprintf('\t-Skip- %14s\n',field_name);
+        if (debug); fprintf('\t-Skip- %14s\n',field_name); end
     else
         
         % Check to see if there is any time data.  If there isn't then the
         % file is empty and we don't need to store it
         if isempty(getfield(getfield(log,field_name),'TimeS'))
-            fprintf('\t-Skip- %14s (Empty Data Set)\n',field_name);
+            if (debug); fprintf('\t-Skip- %14s (Empty Data Set)\n',field_name); end;
             
         else
             % Looks like we have data, import it :)
@@ -130,7 +127,12 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             if (isempty(fieldnames(units_data)))
                 varUnits = repmat({'N/A'},n_channels,1);
             else
-                keyboard
+                warning('Found a dataset with unit!  You should implement this!');
+                % The UNIT file contains how each of the units match to the
+                % letters.  (use char(data.Id)).  I've got it ignoring the
+                % UNIT data file at hte moment so remember to re-enable it.
+                varUnits = repmat({'N/A'},n_channels,1);
+%                 keyboard
             end
             
             % Reference frame of channel
@@ -143,7 +145,7 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
                 channel_data = data.(channel_names{jj});
                 
                 % Add to fds.fdata
-                DAT(:,jj) = channel_data;   
+                DAT(:,jj) = channel_data;
             end
             
             fds = kVIS_fdsAddTreeLeaf(fds, groupName, varNames, varNames, varUnits, varFrames, DAT, parentNode, false);
@@ -217,11 +219,6 @@ end
 % h.izz      = answer{13};
 %
 fprintf('\nImport took %.2f s\n',toc);
-
-%% Update KSID
-fds = kVIS_fdsUpdateAttributes(fds);
-
-kVIS_addDataSet(hObject, fds, []);
 
 return
 
