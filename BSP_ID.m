@@ -27,8 +27,9 @@ BSP_Info.Name = 'ArduPilot';
 BSP_Info.Version = '001';
 
 % Data import function name
-BSP_Info.importFcn = {'APM .bin File'  , 'import_APM_file';
-                      'APM .bin Folder', 'import_APM_folder'};
+BSP_Info.importFcn = {'APM .bin File'  , 'import_APM_file'    ;
+                      'APM .bin Folder', 'import_APM_folder'  ;
+                      'APM .csv Export', 'export_csv'        };
 
 % a custom plot definition for a single axes plot to be shown on the main
 % axes after import of data
