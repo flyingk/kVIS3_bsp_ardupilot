@@ -78,7 +78,7 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             isempty(field_name) )
         
         % skip these
-        if (debug); fprintf('\t-Skip- %14s\n',field_name); end
+        if (debug); fprintf('\t-Skip- %14s (Not a Data Set)\n',field_name); end
     else
         
         % Check to see if there is any time data.  If there isn't then the
@@ -127,16 +127,12 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             if (isempty(fieldnames(units_data)))
                 varUnits = repmat({'N/A'},n_channels,1);
             else
-                warning('Found a dataset with unit!  You should implement this!');
-                % The UNIT file contains how each of the units match to the
-                % letters.  (use char(data.Id)).  I've got it ignoring the
-                % UNIT data file at hte moment so remember to re-enable it.
-                varUnits = repmat({'N/A'},n_channels,1);
-%                 keyboard
+                varUnits = struct2cell(units_data); 
+                varUnits(cellfun('isempty',varUnits)) = {'N/A'};
             end
             
             % Reference frame of channel
-            varFrames = repmat({'Unknown Frame'},n_channels,1);
+            varFrames = repmat({''},n_channels,1);
             
             
             DAT=[];
@@ -149,7 +145,6 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             end
             
             t_start = min(t_start,DAT(1,1));
-            
             
             % Add a new leaf to the tree
             fds = kVIS_fdsAddTreeLeaf(fds, groupName, varNames, varNames, varUnits, varFrames, DAT, parentNode, false);
@@ -165,7 +160,7 @@ fds.fdata(:,2:end) = fds.fdata(:,idx+1);
 % Fix up the time so starts at t = 0
 fds.timeOffset = t_start;
 for ii = 2:numel(fds.fdata(1,:))
-    fds.fdata{7,2}(:,1) = fds.fdata{7,2}(:,1) - fds.timeOffset;
+    fds.fdata{7,ii}(:,1) = fds.fdata{7,ii}(:,1) - fds.timeOffset;
 end
 
 % All done!
