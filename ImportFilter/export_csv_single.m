@@ -4,47 +4,35 @@
 % contributors
 %
 % Contact: kvis3@uav-flightresearch.com
-% 
+%
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
 % the Free Software Foundation, either version 3 of the License, or
 % (at your option) any later version.
-% 
+%
 % This program is distributed in the hope that it will be useful,
 % but WITHOUT ANY WARRANTY; without even the implied warranty of
 % MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 % GNU General Public License for more details.
-% 
+%
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-function [BSP_Info] = BSP_ID()
-% BSP ID function
+function [] = export_csv_single(hObject, ~)
 
-% Name of BSP
-BSP_Info.Name = 'ArduPilot';
+% Choose the output directory
+root_directory = uigetdir(pwd,'Export .csv Files');
 
-BSP_Info.Version = '001';
+% Get the name
+[~, name, ~] = kVIS_dataSetListState(hObject);
 
-% Data import function name
-BSP_Info.importFcn = {'APM .bin File'     , 'import_APM_file'   ;
-                      'APM .bin Folder'   , 'import_APM_folder' ;
-                      'Export .csv Single', 'export_csv_single' ;
-                      'Export .csv All'   , 'export_csv_all'   };
+% Load the fds file
+fds = kVIS_getCurrentFds(hObject);
+    
+% Export to csv
+folder_name = [root_directory,'/',name];
+export_csv(fds,folder_name);
 
-% a custom plot definition for a single axes plot to be shown on the main
-% axes after import of data
-BSP_Info.importPlot = '';
-
-BSP_Info.armedChannel = '';
-
-BSP_Info.flightModeChannel = '';
-
-BSP_Info.mapChannels = {};
-
-BSP_Info.aircraftVisualModelFile = '';
-
-BSP_Info.customTabs = {};
-
-BSP_Info.addOns = {'Create SIDPAC file','fill_fdata_Callback'};
+return
+end
 

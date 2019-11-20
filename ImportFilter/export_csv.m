@@ -18,25 +18,12 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-function [] = export_csv(hObject,~)
+function [] = export_csv(fds,folder_name)
 
-try
-    fds = kVIS_getCurrentFds(hObject);
-catch
-    disp('No fds loaded. Abort.')
-    return;
-end
+% Exports the fds
+mkdir(folder_name);
 
-
-
-% Choose the output directory
-root_directory = uigetdir(pwd,'Export .csv Files');
-
-% Make the output directory
-[~, name, ~] = kVIS_dataSetListState(hObject);
-mkdir([root_directory,'/',name]);
-
-fprintf('Export csv files to %s ... ',[root_directory,'/',name]);
+fprintf('Export csv files to %s ... ',folder_name);
 
 % Loop through each of the sensor files in fdata and export them as a csv
 for ii = 2:size(fds.fdata,2)
@@ -60,7 +47,7 @@ for ii = 2:size(fds.fdata,2)
 %     T.Properties.VariableNames = variable_names; % it doesn't like this
     
     % Write the table to a csv
-    writetable(T,[root_directory,'/',name,'/',sensor,'.csv'],'Delimiter',',') 
+    writetable(T,[folder_name,'/',sensor,'.csv'],'Delimiter',',') 
 
 end
 
