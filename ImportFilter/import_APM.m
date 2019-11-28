@@ -75,10 +75,6 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             strcmp(field_name,'MSG') || ...
             strcmp(field_name,'PARM') || ...
             ...
-            strcmp(field_name,'IMT1') || ...
-            strcmp(field_name,'IMT2') || ...
-            strcmp(field_name,'IMT3') || ...
-            ...
             isempty(field_name) )
         
         % skip these
@@ -88,7 +84,7 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
         % Check to see if there is any time data.  If there isn't then the
         % file is empty and we don't need to store it
         if isempty(getfield(getfield(log,field_name),'TimeS'))
-            if (debug); fprintf('\t-Skip- %14s (Empty Data Set)\n',field_name); end;
+            if (debug); fprintf('\t-Skip- %14s (Empty Data Set)\n',field_name); end
             
         else
             % Looks like we have data, import it :)
@@ -148,11 +144,21 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
                 DAT(:,jj) = channel_data;
             end
             
-            t_start = min(t_start,DAT(1,1));
+            % Check to see if the data is valid
+            if (max(DAT(:,1)) > 1e7)
+                % Data is bad
+                fprintf('\t\t\t\t\t\t  Channel corruption detected, removing bad points\n');
+                locs = find(DAT(:,1) < 1e7);
+                DAT = DAT(locs,:);
+            end
             
-            % Add a new leaf to the tree
-            fds = kVIS_fdsAddTreeLeaf(fds, groupName, varNames, varNames, varUnits, varFrames, DAT, parentNode, false);
-            
+            if ~isempty(DAT)
+                t_start = min(t_start,DAT(1,1));
+                
+                % Add a new leaf to the tree
+                fds = kVIS_fdsAddTreeLeaf(fds, groupName, varNames, varNames, varUnits, varFrames, DAT, parentNode, false);
+            end
+         
         end
     end
 end
