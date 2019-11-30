@@ -152,6 +152,36 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
                 DAT = DAT(locs,:);
             end
             
+            % Add additional fields to certain groups
+            if (strcmp(groupName,'NKF1') || ...
+                    strcmp(groupName,'NKF6')   )
+                
+                varNames  = [ varNames', 'V', 'DistToHome']';
+                varUnits  = [ varUnits', 'm/s', 'm' ]';
+                varFrames = [ varFrames', {''}, {''}]';
+                DAT = [ DAT, sqrt(DAT(:,5).^2 + DAT(:,6).^2), sqrt(DAT(:,9).^2 + DAT(:,10).^2)];
+               
+            end
+            
+            if (strcmp(groupName,'BAT'))
+                
+                varNames  = [ varNames', 'Power']';
+                varUnits  = [ varUnits', 'W' ]';
+                varFrames = [ varFrames', {''}]';
+                DAT = [ DAT, DAT(:,2).*DAT(:,4)];
+                
+            end
+            
+            if (strcmp(groupName,'PSC'))
+                
+                varNames  = [ varNames', 'TV', 'V']';
+                varUnits  = [ varUnits', 'm/s', 'm/s']';
+                varFrames = [ varFrames', {''}, {''}]';
+                DAT = [ DAT, sqrt(DAT(:,6).^2 + DAT(:,7).^2), sqrt(DAT(:,8).^2 + DAT(:,9).^2)];
+                
+            end
+            
+            % Add data to fds
             if ~isempty(DAT)
                 t_start = min(t_start,DAT(1,1));
                 
