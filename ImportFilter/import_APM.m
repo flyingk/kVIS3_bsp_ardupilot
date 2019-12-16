@@ -159,8 +159,15 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
                 varNames  = [ varNames', 'V', 'DistToHome']';
                 varUnits  = [ varUnits', 'm/s', 'm' ]';
                 varFrames = [ varFrames', {''}, {''}]';
-                DAT = [ DAT, sqrt(DAT(:,5).^2 + DAT(:,6).^2), sqrt(DAT(:,9).^2 + DAT(:,10).^2)];
-               
+                
+                VN = DAT(:,strcmp(varNames,'VN'));
+                VE = DAT(:,strcmp(varNames,'VE'));
+                
+                PN = DAT(:,strcmp(varNames,'PN'));
+                PE = DAT(:,strcmp(varNames,'PE'));
+                
+                DAT = [ DAT, sqrt(VN.^2 + VE.^2), sqrt(PN.^2 + PE.^2)];
+                
             end
             
             if (strcmp(groupName,'BAT'))
@@ -168,7 +175,11 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
                 varNames  = [ varNames', 'Power']';
                 varUnits  = [ varUnits', 'W' ]';
                 varFrames = [ varFrames', {''}]';
-                DAT = [ DAT, DAT(:,2).*DAT(:,4)];
+                
+                V = DAT(:,strcmp(varNames,'Volt'));
+                I = DAT(:,strcmp(varNames,'Curr'));
+                
+                DAT = [ DAT, V.*I];
                 
             end
             
@@ -177,7 +188,13 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
                 varNames  = [ varNames', 'TV', 'V']';
                 varUnits  = [ varUnits', 'm/s', 'm/s']';
                 varFrames = [ varFrames', {''}, {''}]';
-                DAT = [ DAT, sqrt(DAT(:,6).^2 + DAT(:,7).^2), sqrt(DAT(:,8).^2 + DAT(:,9).^2)];
+                
+                TVX = DAT(:,strcmp(varNames,'TVX'));
+                TVY = DAT(:,strcmp(varNames,'TVY'));
+                VX  = DAT(:,strcmp(varNames,'VX'));
+                VY  = DAT(:,strcmp(varNames,'VY'));
+                
+                DAT = [ DAT, sqrt(TVX.^2 + TVY.^2), sqrt(VX.^2 + VY.^2)];
                 
             end
             
