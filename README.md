@@ -1,5 +1,7 @@
 ## kVIS3 Board Support Package (BSP) for ArduPilot Data
 
+A support package for [kVIS3 data visualisation](https://github.com/flyingk/kVIS3)
+
 ### Functions:
 - import an ArduPilot dataset (*.bin)
 - plot flight path on google map (API key required)
