@@ -46,5 +46,5 @@ BSP_Info.aircraftVisualModelFile = '';
 
 BSP_Info.customTabs = {};
 
-BSP_Info.addOns = {'Create SIDPAC file','fill_fdata_Callback'};
+BSP_Info.addOns = {'Create SIDPAC file','','fill_fdata_Callback'};
 
