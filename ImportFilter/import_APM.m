@@ -119,9 +119,7 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             
             % List of channel names
             varNames = fieldnames(data); % reference name
-%             fds.fdata{ 5,idx_data} = fieldnames(data); % display name
-%             fds.fdata{ 6,idx_data} = fieldnames(data); % tex name
-
+            varNames{(strcmp(varNames,'TimeS'))} = 'Time'; % Change TimeS to Time for compatibility
             
             % List of channel units
             if (isempty(fieldnames(units_data)))
