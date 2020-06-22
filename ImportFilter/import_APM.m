@@ -72,6 +72,7 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             strcmp(field_name,'FMT') || ...
             strcmp(field_name,'FMTU') || ...
             strcmp(field_name,'UNIT') || ...
+            strcmp(field_name,'MULT') || ...
             strcmp(field_name,'MSG') || ...
             strcmp(field_name,'PARM') || ...
             ...
@@ -208,6 +209,9 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
     end
 end
 
+% Break up sensor data that has an 'Id' feild
+fds = breakup_sensor_data(fds);
+
 % Sort the fdata fields alphabetically
 [~,idx] = sort(fds.fdata(1,2:end));
 fds.fdata(:,2:end) = fds.fdata(:,idx+1);
@@ -222,4 +226,46 @@ end
 fprintf('\nImport took %.2f s\n',toc);
 
 return
+end
+
+function fds = breakup_sensor_data(fds)
+
+% Certain data groups have an ID where multiple sensors are stored in the
+% same file.  These need to be broken up
+for ii = 1:size(fds.fdata,2)
+    % Check to see if data stream has an Id field
+    if max((strcmp(fds.fdata{2,ii},'Id')))
+        % Find where the Id string is stored
+        groupName_base = fds.fdata{1,ii};
+        fprintf('Multiple sensors in %s\n',groupName_base)
+        idx_Id = strcmp(fds.fdata{2,ii},'Id');
+        id_list = unique(fds.fdata{7,ii}(:,idx_Id));
+        
+        for jj = 1:numel(id_list)
+            % Work out which index we are using
+            id = id_list(jj);
+            idx = (fds.fdata{7,ii}(:,idx_Id) == id);
+            groupName = sprintf('%s[%d]',groupName_base,id);
+            
+            % Assembly data
+            varNames = fds.fdata{2,ii};
+            varUnits =  fds.fdata{3,ii};
+            varFrames = fds.fdata{4,ii};
+            parentNode = 1;
+            
+            DAT = fds.fdata{7,ii}(idx,:);
+            
+            % Add leaf to tree
+            fds = kVIS_fdsAddTreeLeaf(fds, groupName, varNames, varNames, varUnits, varFrames, DAT, parentNode, false);
+            
+        end
+    end
+end
+
+% Probably a good idea to remove the original file
+
+
+% End of function
+return
+end
 
