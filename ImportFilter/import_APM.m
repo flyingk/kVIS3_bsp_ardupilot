@@ -41,6 +41,9 @@ fprintf('\t%s\n\n',file);
 log = Ardupilog(file);
 log = log.getStruct();
 
+% Get file name
+[pathstr,name,ext] = fileparts(file);
+
 %% get new fds structure
 fds = kVIS_fdsInitNew();
 
@@ -212,6 +215,18 @@ end
 % Break up sensor data that has an 'Id' feild
 fds = breakup_sensor_data(fds);
 
+% Add vehicle data (if file found)
+if exist([pathstr,'\',name,'.m'],'file')
+    % Import data from a particular flight preferentially
+    fds = add_vehicle_data([pathstr,'\',name,'.m'],fds);
+    
+elseif exist([pathstr,'\flight_info.m'],'file')
+    % Import data from the folders
+    fds = add_vehicle_data([pathstr,'\flight_info.m'],fds);
+    
+end
+
+
 % Sort the fdata fields alphabetically
 [~,idx] = sort(fds.fdata(1,2:end));
 fds.fdata(:,2:end) = fds.fdata(:,idx+1);
@@ -226,6 +241,40 @@ end
 fprintf('\nImport took %.2f s\n',toc);
 
 return
+end
+
+function fds = add_vehicle_data(file,fds)
+% Automatically adds information about the flight from a file
+fprintf('\n\tAdding vechile data from %s\n',file);
+run(file);
+
+% Aircraft data
+try; fds.aircraftData.acIdentifier = acIdentifier; end
+try; fds.aircraftData.sRef = sRef; end
+try; fds.aircraftData.cRef = cRef; end
+try; fds.aircraftData.bRef = bRef; end
+try; fds.aircraftData.mass = mass; end
+try; fds.aircraftData.ixx = ixx; end
+try; fds.aircraftData.iyy = iyy; end
+try; fds.aircraftData.izz = izz; end
+try; fds.aircraftData.ixz = ixz; end
+try; fds.aircraftData.xCG = xCG; end
+try; fds.aircraftData.yCG = yCG; end
+try; fds.aircraftData.zCG = zCG; end
+
+% Test Info
+try; fds.testInfo.date = 0; end
+try; fds.testInfo.startTime = 0; end
+try; fds.testInfo.description = 0; end
+try; fds.testInfo.pilot = 0; end
+try; fds.testInfo.location = 0; end
+try; fds.testInfo.weather = 0; end
+try; fds.testInfo.windDir = 0; end
+try; fds.testInfo.windSpeed = 0; end
+try; fds.testInfo.ambientPressure = 0; end
+try; fds.testInfo.ambientTemperature = 0; end
+
+return;
 end
 
 function fds = breakup_sensor_data(fds)
