@@ -51,10 +51,8 @@ fds.BoardSupportPackage = 'ArduPilot';
 
 [fds, parentNode] = kVIS_fdsAddTreeBranch(fds, 0, 'APM_Data');
 
-
 %% read data
 data_stream_names = fieldnames(log);
-
 
 for ii = 1:numel(data_stream_names) % change to a 1 later
     
@@ -96,9 +94,9 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             data = log.(field_name);
             
             % Remove out what we don't need
-            data = rmfield(data,'typeNumID');
-            data = rmfield(data,'DatenumUTC');
-            data = rmfield(data,'TimeUS');
+            try data = rmfield(data,'typeNumID'); end
+            try data = rmfield(data,'DatenumUTC'); end
+            try data = rmfield(data,'TimeUS'); end
             
             % Get the number of points
             n_points = length(data.LineNo);
@@ -112,7 +110,6 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             multipliers_data = data.('fieldMultipliers');
             data = rmfield(data,'fieldMultipliers');
             
-     
             % Create name for new struct (group name)
             groupName = data.('name');
             data = rmfield(data,'name');
@@ -129,7 +126,7 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             if (isempty(fieldnames(units_data)))
                 varUnits = repmat({'N/A'},n_channels,1);
             else
-                varUnits = struct2cell(units_data); 
+                varUnits = struct2cell(units_data);
                 varUnits(cellfun('isempty',varUnits)) = {'N/A'};
             end
             
@@ -207,7 +204,7 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
                 % Add a new leaf to the tree
                 fds = kVIS_fdsAddTreeLeaf(fds, groupName, varNames, varNames, varUnits, varFrames, DAT, parentNode, false);
             end
-         
+            
         end
     end
 end
