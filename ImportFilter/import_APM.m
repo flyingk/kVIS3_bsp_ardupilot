@@ -197,6 +197,20 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
                 
             end
             
+            if (strcmp(groupName,'BARO'))
+                
+                varNames  = [ varNames', 'Rho']';
+                varUnits  = [ varUnits', 'kg/m3']';
+                varFrames = [ varFrames', {''}]';
+                
+                P = DAT(:,strcmp(varNames,'Press'));
+                T = DAT(:,strcmp(varNames,'Temp'));
+                rho = calcDensity(P,T);
+                
+                DAT = [ DAT, rho ];
+                
+            end
+            
             % Add data to fds
             if ~isempty(DAT)
                 t_start = min(t_start,DAT(1,1));
@@ -315,3 +329,16 @@ end
 return
 end
 
+function rho = calcDensity(P,T)
+% Calculates the air density (assuming dry air)
+% P is pressure in Pascals
+% T is temperature in Celcius
+
+R = 287.05;      % Specific gas constant for dry air [ J/(kg*K) ]
+T = T + 273.15;  % Convert temperature to Kelvin [ K ]
+
+% Ideal gas law
+rho = P ./ (R.*T);
+
+return
+end
