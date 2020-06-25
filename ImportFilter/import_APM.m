@@ -245,7 +245,7 @@ fds.fdata(:,2:end) = fds.fdata(:,idx+1);
 % Fix up the time so starts at t = 0
 fds.timeOffset = t_start;
 for ii = 2:numel(fds.fdata(1,:))
-    fds.fdata{7,ii}(:,1) = fds.fdata{7,ii}(:,1) - fds.timeOffset;
+    fds.fdata{fds.fdataRows.data,ii}(:,1) = fds.fdata{fds.fdataRows.data,ii}(:,1) - fds.timeOffset;
 end
 
 % All done!
@@ -294,26 +294,28 @@ function fds = breakup_sensor_data(fds)
 % same file.  These need to be broken up
 for ii = 1:size(fds.fdata,2)
     % Check to see if data stream has an Id field
-    if max((strcmp(fds.fdata{2,ii},'Id')))
+    if max((strcmp(fds.fdata{fds.fdataRows.varNames,ii},'Id')))
         % Find where the Id string is stored
         groupName_base = fds.fdata{1,ii};
         fprintf('Multiple sensors in %s\n',groupName_base)
-        idx_Id = strcmp(fds.fdata{2,ii},'Id');
-        id_list = unique(fds.fdata{7,ii}(:,idx_Id));
+        idx_Id = strcmp(fds.fdata{fds.fdataRows.varNames,ii},'Id');
+        id_list = unique(fds.fdata{fds.fdataRows.data,ii}(:,idx_Id));
         
         for jj = 1:numel(id_list)
             % Work out which index we are using
             id = id_list(jj);
-            idx = (fds.fdata{7,ii}(:,idx_Id) == id);
+            idx = (fds.fdata{fds.fdataRows.data,ii}(:,idx_Id) == id);
             groupName = sprintf('%s[%d]',groupName_base,id);
             
+            fprintf('\tAdding %s\n',groupName);
+            
             % Assembly data
-            varNames = fds.fdata{2,ii};
-            varUnits =  fds.fdata{3,ii};
-            varFrames = fds.fdata{4,ii};
+            varNames = fds.fdata{fds.fdataRows.varNames,ii};
+            varUnits =  fds.fdata{fds.fdataRows.varUnits,ii};
+            varFrames = fds.fdata{fds.fdataRows.varFrames,ii};
             parentNode = 1;
             
-            DAT = fds.fdata{7,ii}(idx,:);
+            DAT = fds.fdata{fds.fdataRows.data,ii}(idx,:);
             
             % Add leaf to tree
             fds = kVIS_fdsAddTreeLeaf(fds, groupName, varNames, varNames, varUnits, varFrames, DAT, parentNode, false);
