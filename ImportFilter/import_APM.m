@@ -308,34 +308,44 @@ function fds = breakup_sensor_data(fds)
 
 % Certain data groups have an ID where multiple sensors are stored in the
 % same file.  These need to be broken up
-for ii = 1:size(fds.fdata,2)
+for ii = 1:size(fds.fdata,2)  
     % Check to see if data stream has an Id field
     if max((strcmp(fds.fdata{fds.fdataRows.varNames,ii},'Id')))
         % Find where the Id string is stored
         groupName_base = fds.fdata{1,ii};
-        fprintf('Multiple sensors in %s\n',groupName_base)
-        idx_Id = strcmp(fds.fdata{fds.fdataRows.varNames,ii},'Id');
-        id_list = unique(fds.fdata{fds.fdataRows.data,ii}(:,idx_Id));
         
-        for jj = 1:numel(id_list)
-            % Work out which index we are using
-            id = id_list(jj);
-            idx = (fds.fdata{fds.fdataRows.data,ii}(:,idx_Id) == id);
-            groupName = sprintf('%s[%d]',groupName_base,id);
+        if strcmp(groupName_base,'D32') || ...
+                strcmp(groupName_base,'DU32') || ...
+                strcmp(groupName_base,'EV')
             
-            fprintf('\tAdding %s\n',groupName);
+            % Skip these, they're meant to be ID
             
-            % Assembly data
-            varNames = fds.fdata{fds.fdataRows.varNames,ii};
-            varUnits =  fds.fdata{fds.fdataRows.varUnits,ii};
-            varFrames = fds.fdata{fds.fdataRows.varFrames,ii};
-            parentNode = 1;
+        else
             
-            DAT = fds.fdata{fds.fdataRows.data,ii}(idx,:);
+            fprintf('Multiple sensors in %s\n',groupName_base)
+            idx_Id = strcmp(fds.fdata{fds.fdataRows.varNames,ii},'Id');
+            id_list = unique(fds.fdata{fds.fdataRows.data,ii}(:,idx_Id));
             
-            % Add leaf to tree
-            fds = kVIS_fdsAddTreeLeaf(fds, groupName, varNames, varNames, varUnits, varFrames, DAT, parentNode, false);
-            
+            for jj = 1:numel(id_list)
+                % Work out which index we are using
+                id = id_list(jj);
+                idx = (fds.fdata{fds.fdataRows.data,ii}(:,idx_Id) == id);
+                groupName = sprintf('%s[%d]',groupName_base,id);
+                
+                fprintf('\tAdding %s\n',groupName);
+                
+                % Assembly data
+                varNames = fds.fdata{fds.fdataRows.varNames,ii};
+                varUnits =  fds.fdata{fds.fdataRows.varUnits,ii};
+                varFrames = fds.fdata{fds.fdataRows.varFrames,ii};
+                parentNode = 1;
+                
+                DAT = fds.fdata{fds.fdataRows.data,ii}(idx,:);
+                
+                % Add leaf to tree
+                fds = kVIS_fdsAddTreeLeaf(fds, groupName, varNames, varNames, varUnits, varFrames, DAT, parentNode, false);
+                
+            end
         end
     end
 end
