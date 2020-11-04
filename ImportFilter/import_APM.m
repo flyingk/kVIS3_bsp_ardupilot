@@ -57,7 +57,7 @@ data_stream_names = fieldnames(log);
 for ii = 1:numel(data_stream_names) % change to a 1 later
     
     field_name = data_stream_names{ii};
-    
+
     % Exception list
     if ( strcmp(field_name,'fileName') || ...
             strcmp(field_name,'filePathName' ) || ...
@@ -221,6 +221,22 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             
         end
     end
+
+    if strcmp(field_name,'PARM') 
+        % Create a special field for the params
+        for jj = 1:length(log.(field_name).Name)
+            param_name =  (log.(field_name).Name(jj,:));
+            param_name = deblank(param_name);
+            fds.Param.(param_name) = (log.(field_name).Value(jj));           
+        end
+    end
+    
+    if strcmp(field_name,'MSG')
+        % Create a special field for the messages
+        fds.msg.Time = log.(field_name).TimeS/1e6;
+        fds.msg.MSG = log.(field_name).Message;
+    end
+    
 end
 
 % Break up sensor data that has an 'Id' feild
