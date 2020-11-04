@@ -22,6 +22,11 @@ function fds = import_APM(file)
 
 debug = 1;
 
+if (~nargin)
+    file = './../Sample_Data/00000008.BIN';
+    dbstop if error
+end
+
 % Constants
 RTD = 180.0/pi;
 t_start = inf;
@@ -76,6 +81,8 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             strcmp(field_name,'MULT') || ...
             strcmp(field_name,'MSG') || ...
             strcmp(field_name,'PARM') || ...
+            ...
+            strcmp(field_name,'ISBD') || ...
             ...
             isempty(field_name) )
         
@@ -144,10 +151,10 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             end
             
             % Check to see if the data is valid
-            if (max(DAT(:,1)) > 1e7)
+            if (max(DAT(:,1)) > 1e8)
                 % Data is bad
                 fprintf('\t\t\t\t\t\t  Channel corruption detected, removing bad points\n');
-                locs = find(DAT(:,1) < 1e7);
+                locs = find(DAT(:,1) < 1e8);
                 DAT = DAT(locs,:);
             end
             
