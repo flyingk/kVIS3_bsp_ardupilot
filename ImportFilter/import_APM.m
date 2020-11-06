@@ -151,10 +151,10 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             end
             
             % Check to see if the data is valid
-            if (max(DAT(:,1)) > 1e8)
+            if (max(DAT(:,1)) > 1e6)
                 % Data is bad
                 fprintf('\t\t\t\t\t\t  Channel corruption detected, removing bad points\n');
-                locs = find(DAT(:,1) < 1e8);
+                locs = find(DAT(:,1) < 1e6);
                 DAT = DAT(locs,:);
             end
             
