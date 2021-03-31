@@ -234,7 +234,11 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
         for jj = 1:length(log.(field_name).Name)
             param_name =  (log.(field_name).Name(jj,:));
             param_name = deblank(param_name);
-            fds.Param.(param_name) = (log.(field_name).Value(jj));           
+            if (isvarname(param_name))
+                fds.Param.(param_name) = (log.(field_name).Value(jj));   
+            else
+                fprintf('Couldn''t store param %s\n',param_name);
+            end
         end
     end
     
