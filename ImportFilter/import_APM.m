@@ -204,7 +204,7 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
                 
             end
             
-            if (strcmp(groupName,'BARO'))
+            if (strcmp(groupName,'BARO') || strcmp(groupName,'BAR2') || strcmp(groupName,'BAR3'))
                 
                 varNames  = [ varNames', 'Rho']';
                 varUnits  = [ varUnits', 'kg/m3']';
