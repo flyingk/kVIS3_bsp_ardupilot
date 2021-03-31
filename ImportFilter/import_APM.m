@@ -246,7 +246,7 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
     
 end
 
-% Break up sensor data that has an 'Id' feild
+%% Break up sensor data that has an 'Id' feild
 fds = breakup_sensor_data(fds);
 
 % Add vehicle data (if file found)
@@ -261,17 +261,17 @@ elseif exist([pathstr,'\flight_info.m'],'file')
 end
 
 
-% Sort the fdata fields alphabetically
+%% Sort the fdata fields alphabetically
 [~,idx] = sort(fds.fdata(1,2:end));
 fds.fdata(:,2:end) = fds.fdata(:,idx+1);
 
-% Fix up the time so starts at t = 0
 fds.timeOffset = t_start;
+%% Fix up the time so starts at t = 0
 for ii = 2:numel(fds.fdata(1,:))
     fds.fdata{fds.fdataRows.data,ii}(:,1) = fds.fdata{fds.fdataRows.data,ii}(:,1) - fds.timeOffset;
 end
 
-% All done!
+%% All done!
 fprintf('\nImport took %.2f s\n',toc);
 
 return
