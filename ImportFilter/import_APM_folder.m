@@ -20,7 +20,7 @@
 
 function [] = import_APM_folder(hObject, ~)
 
-%% Select PX4 Log folder
+%% Select APM Log folder
 root_directory = uigetdir(pwd,'Import APM Folder');
 files = dir([root_directory,'\**\*.bin']);
 
