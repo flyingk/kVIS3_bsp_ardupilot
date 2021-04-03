@@ -294,8 +294,9 @@ if numel(modeTimes > 1)
             modeNumbers(ii) = [];
             modeTimes(ii)   = [];
             modeReasons(ii) = [];
+        else
+            ii = ii+1;
         end
-        ii = ii+1;
     end
 end
 
