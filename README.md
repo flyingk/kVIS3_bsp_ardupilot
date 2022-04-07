@@ -11,7 +11,7 @@ A support package for [kVIS3 data visualisation](https://github.com/flyingk/kVIS
 #### Getting the Code
 The ArduPilot BSP can be cloned using git into your preferred directory, or downloaded as a zip from the github page.
 ```
-git clone git@github.com:flyingk/kVIS3_bsp_ardupilot.git --recursive
+git clone https://github.com/flyingk/kVIS3_bsp_ardupilot.git --recursive
 ```
 The import relies on a submodule to import the BIN file into MATLAB, so if you forget the `--recursive` tag, you can pull the submodules from within the BSP but running
 ```
