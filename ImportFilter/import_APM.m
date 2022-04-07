@@ -147,8 +147,12 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
             for jj = 1:n_channels
                 channel_data = data.(channel_names{jj});
                 
-                % Add to fds.fdata
-                DAT(:,jj) = channel_data;
+                % Add to fds.fdata if data is numeric, otherwise nan it
+                if (isnumeric(channel_data))
+                    DAT(:,jj) = channel_data;
+                else
+                    DAT(:,jj) = nan(size(channel_data,1),1);
+                end
             end
             
             % Check to see if the data is valid
