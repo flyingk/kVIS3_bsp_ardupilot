@@ -59,6 +59,7 @@ fds.BoardSupportPackage = 'ArduPilot';
 
 %% read data
 data_stream_names = fieldnames(log);
+storedGroupNames = {};
 
 for ii = 1:numel(data_stream_names) % change to a 1 later
     
@@ -112,7 +113,6 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
                 sensorNode = rootNode;
             end
 
-
             % Loop through each instance
             for jj = 1:n_instances
 
@@ -151,6 +151,15 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
                 data = rmfield(data,'name');
                 if n_instances > 1
                     groupName = [groupName,'_',num2str(instance_number)];
+
+                    index = ~cellfun('isempty', strfind(storedGroupNames, groupName));
+
+                    if isempty(index)
+                        storedGroupNames{end+1,1} = groupName;
+                    else
+                        fprintf('\t\tGroup %s already exists, skipping\n',groupName);
+                        continue
+                    end 
                 end
                 
                 % Get number of fields
