@@ -150,11 +150,11 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
                 groupName = data.('name'); ...
                 data = rmfield(data,'name');
                 if n_instances > 1
+
                     groupName = [groupName,'_',num2str(instance_number)];
+                    nameUnique = ~any(strcmp(storedGroupNames,groupName));
 
-                    index = ~cellfun('isempty', strfind(storedGroupNames, groupName));
-
-                    if isempty(index)
+                    if (nameUnique)
                         storedGroupNames{end+1,1} = groupName;
                     else
                         fprintf('\t\tGroup %s already exists, skipping\n',groupName);
@@ -325,8 +325,11 @@ end
 
 
 %% Sort the fdata fields alphabetically
-[~,idx] = sort(fds.fdata(1,2:end));
-fds.fdata(:,2:end) = fds.fdata(:,idx+1);
+% There needs to be a more intelligent way of doing this
+% as it will break any references to parent nodes.  Currently
+% files import alphabetically so doesn't really matter.
+% [~,idx] = sort(fds.fdata(1,2:end));
+% fds.fdata(:,2:end) = fds.fdata(:,idx+1);
 
 %% Fix up the time so starts at t = 0
 fds.timeOffset = t_start; t_end = t_end - t_start;
