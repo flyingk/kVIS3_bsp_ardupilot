@@ -279,6 +279,28 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
                 if ~isempty(DAT)
                     t_start = min(t_start,DAT(1,1));
                     t_end   = max(t_end  ,DAT(end,1));
+
+                    % Replace nan data with 0
+                    DAT(isnan(DAT))=0;
+
+                    % Check len(varNames) == len(varUnits) ==
+                    % len(varFrames) == len(DAT)
+                    n_expected = size(DAT,2);
+                    if (numel(varNames) ~= n_expected)
+                        fprintf('\t\tName length mismatch, going to use default field names\n');
+                        for kk = 1:n_expected
+                            varNames{kk,1} = sprintf('field_%d',kk);
+                        end
+                        keyboard
+                    end
+                    if (numel(varUnits) ~= n_expected)
+                        fprintf('\t\tUnit length mismatch, going to default to N/As\n');
+                        varUnits = repmat({'N/A'},n_expected,1);
+                    end
+                    if (numel(varFrames) ~= n_expected)
+                        fprintf('\t\tFrame length mismatch, going to default to N/As\n');
+                        varFrames = repmat({'N/A'},n_expected,1);
+                    end
                     
                     % Add a new leaf to the tree
                     fds = kVIS_fdsAddTreeLeaf(fds, groupName, varNames, varNames, varUnits, varFrames, DAT, sensorNode, false);
