@@ -55,10 +55,11 @@ fds = kVIS_fdsInitNew();
 
 fds.BoardSupportPackage = 'ArduPilot';
 
-[fds, parentNode] = kVIS_fdsAddTreeBranch(fds, 0, 'APM_Data');
+[fds, rootNode] = kVIS_fdsAddTreeBranch(fds, 0, 'APM_Data');
 
 %% read data
 data_stream_names = fieldnames(log);
+storedGroupNames = {};
 
 for ii = 1:numel(data_stream_names) % change to a 1 later
     
@@ -99,135 +100,213 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
         else
             % Looks like we have data, import it :)
             fprintf('\tImport %14s\n',field_name);
-            data = log.(field_name);
-            
-            % Remove out what we don't need
-            try data = rmfield(data,'typeNumID'); end
-            try data = rmfield(data,'DatenumUTC'); end
-            try data = rmfield(data,'TimeUS'); end
-            
-            % Get the number of points
-            n_points = length(data.LineNo);
-            data = rmfield(data,'LineNo');
-            
-            % Get the units (then remove field)
-            units_data = data.('fieldUnits');
-            data = rmfield(data,'fieldUnits');
-            
-            % Get field multipliers
-            multipliers_data = data.('fieldMultipliers');
-            data = rmfield(data,'fieldMultipliers');
-            
-            % Create name for new struct (group name)
-            groupName = data.('name');
-            data = rmfield(data,'name');
-            
-            % Get number of fields
-            channel_names = fieldnames(data);
-            n_channels = numel(channel_names);
-            
-            % List of channel names
-            varNames = fieldnames(data); % reference name
-            varNames{(strcmp(varNames,'TimeS'))} = 'Time'; % Change TimeS to Time for compatibility
-            
-            % List of channel units
-            if (isempty(fieldnames(units_data)))
-                varUnits = repmat({'N/A'},n_channels,1);
+            sensorData = log.(field_name);
+
+            % Work out how many instances
+            n_instances = numel(sensorData);
+            if n_instances > 1
+                fprintf('\t\t%d Instances\n',n_instances);
+                % Create a new branch for multiple-instance sensor data
+                [fds, sensorNode] = kVIS_fdsAddTreeBranch(fds, rootNode, field_name);
             else
-                varUnits = struct2cell(units_data);
-                varUnits(cellfun('isempty',varUnits)) = {'N/A'};
+                % Use the root node
+                sensorNode = rootNode;
             end
-            
-            % Reference frame of channel
-            varFrames = repmat({''},n_channels,1);
-            
-            
-            DAT=[];
-            
-            for jj = 1:n_channels
-                channel_data = data.(channel_names{jj});
+
+            % Loop through each instance
+            for jj = 1:n_instances
+
+                data = sensorData(jj);
+
+                % Remove out what we don't need
+                try data = rmfield(data,'typeNumID'); end
+                try data = rmfield(data,'DatenumUTC'); end
+                try data = rmfield(data,'TimeUS'); end
                 
-                % Add to fds.fdata
-                DAT(:,jj) = channel_data;
+                % Get the number of points
+                n_points = length(data.LineNo);
+                data = rmfield(data,'LineNo');
+    
+                % Get the instance number (then remove the field)
+                fields = fieldnames(data.fieldUnits);
+                instance_number = data.MsgInstance;
+                for kk = 1:numel(fields)
+                    if strcmp(data.fieldUnits.(fields{kk}),'instance')
+                        instance_number = data.(fields{kk})(1);
+                    end
+                end
+                
+                data = rmfield(data,'MsgInstance');
+                
+                % Get the units (then remove field)
+                units_data = data.('fieldUnits');
+                data = rmfield(data,'fieldUnits');
+                
+                % Get field multipliers
+                multipliers_data = data.('fieldMultipliers');
+                data = rmfield(data,'fieldMultipliers');
+                
+                % Create name for new struct (group name)
+                groupName = data.('name'); ...
+                data = rmfield(data,'name');
+                if n_instances > 1
+
+                    groupName = [groupName,'_',num2str(instance_number)];
+                    nameUnique = ~any(strcmp(storedGroupNames,groupName));
+
+                    if (nameUnique)
+                        storedGroupNames{end+1,1} = groupName;
+                    else
+                        fprintf('\t\tGroup %s already exists, skipping\n',groupName);
+                        continue
+                    end 
+                end
+                
+                % Get number of fields
+                channel_names = fieldnames(data);
+                n_channels = numel(channel_names);
+                
+                % List of channel names
+                varNames = fieldnames(data); % reference name
+                varNames{(strcmp(varNames,'TimeS'))} = 'Time'; % Change TimeS to Time for compatibility
+                
+                % List of channel units
+                if (isempty(fieldnames(units_data)))
+                    varUnits = repmat({'N/A'},n_channels,1);
+                else
+                    varUnits = struct2cell(units_data);
+                    varUnits(cellfun('isempty',varUnits)) = {'N/A'};
+                end
+                
+                % Reference frame of channel
+                varFrames = repmat({''},n_channels,1);
+                
+                DAT=[];
+                
+                for kk = 1:n_channels
+    
+    %                 if (strcmp(channel_names{kk},'MsgInstance'))
+    %                     % This is from the splitting up instances, we need to
+    %                     % remove it otherwise things break...
+    %                     a = 1;
+    %                     varNames(kk) = [];
+    %                     %varUnits(kk) = [];
+    %                     varFrames(kk) = [];
+    % 
+    %                 else
+                        channel_data = data.(channel_names{kk});
+                        
+                        % Add to fds.fdata if data is numeric, otherwise nan it
+                        if (isnumeric(channel_data))
+                            DAT(:,kk) = channel_data;
+                        else
+                            DAT(:,kk) = nan(size(channel_data,1),1);
+                        end
+    
+    %                     a = 1;
+    %                 end
+                end
+                
+                % Check to see if the data is valid
+                if (max(DAT(:,1)) > 1e6)
+                    % Data is bad
+                    fprintf('\t\t\t\t\t\t  Channel corruption detected, removing bad points\n');
+                    locs = find(DAT(:,1) < 1e6);
+                    DAT = DAT(locs,:);
+                end
+                
+                % Add additional fields to certain groups
+                if (strcmp(groupName,'NKF1') || ...
+                        strcmp(groupName,'NKF6')   )
+                    
+                    varNames  = [ varNames', 'V', 'DistToHome']';
+                    varUnits  = [ varUnits', 'm/s', 'm' ]';
+                    varFrames = [ varFrames', {''}, {''}]';
+                    
+                    VN = DAT(:,strcmp(varNames,'VN'));
+                    VE = DAT(:,strcmp(varNames,'VE'));
+                    
+                    PN = DAT(:,strcmp(varNames,'PN'));
+                    PE = DAT(:,strcmp(varNames,'PE'));
+                    
+                    DAT = [ DAT, sqrt(VN.^2 + VE.^2), sqrt(PN.^2 + PE.^2)];
+                    
+                end
+                
+                if (strcmp(groupName,'BAT'))
+                    
+                    varNames  = [ varNames', 'Power']';
+                    varUnits  = [ varUnits', 'W' ]';
+                    varFrames = [ varFrames', {''}]';
+                    
+                    V = DAT(:,strcmp(varNames,'Volt'));
+                    I = DAT(:,strcmp(varNames,'Curr'));
+                    
+                    DAT = [ DAT, V.*I];
+                    
+                end
+                
+                if (strcmp(groupName,'PSC'))
+                    
+                    varNames  = [ varNames', 'TV', 'V']';
+                    varUnits  = [ varUnits', 'm/s', 'm/s']';
+                    varFrames = [ varFrames', {''}, {''}]';
+                    
+                    TVX = DAT(:,strcmp(varNames,'TVX'));
+                    TVY = DAT(:,strcmp(varNames,'TVY'));
+                    VX  = DAT(:,strcmp(varNames,'VX'));
+                    VY  = DAT(:,strcmp(varNames,'VY'));
+                    
+                    DAT = [ DAT, sqrt(TVX.^2 + TVY.^2), sqrt(VX.^2 + VY.^2)];
+                    
+                end
+                
+                if (strcmp(groupName,'BARO') || strcmp(groupName,'BAR2') || strcmp(groupName,'BAR3'))
+                    
+                    varNames  = [ varNames', 'Rho']';
+                    varUnits  = [ varUnits', 'kg/m3']';
+                    varFrames = [ varFrames', {''}]';
+                    
+                    P = DAT(:,strcmp(varNames,'Press'));
+                    T = DAT(:,strcmp(varNames,'Temp'));
+                    rho = calcDensity(P,T);
+                    
+                    DAT = [ DAT, rho ];
+                    
+                end
+                
+                % Add data to fds
+                if ~isempty(DAT)
+                    t_start = min(t_start,DAT(1,1));
+                    t_end   = max(t_end  ,DAT(end,1));
+
+                    % Replace nan data with 0
+                    DAT(isnan(DAT))=0;
+
+                    % Check len(varNames) == len(varUnits) ==
+                    % len(varFrames) == len(DAT)
+                    n_expected = size(DAT,2);
+                    if (numel(varNames) ~= n_expected)
+                        fprintf('\t\tName length mismatch, going to use default field names\n');
+                        for kk = 1:n_expected
+                            varNames{kk,1} = sprintf('field_%d',kk);
+                        end
+                        keyboard
+                    end
+                    if (numel(varUnits) ~= n_expected)
+                        fprintf('\t\tUnit length mismatch, going to default to N/As\n');
+                        varUnits = repmat({'N/A'},n_expected,1);
+                    end
+                    if (numel(varFrames) ~= n_expected)
+                        fprintf('\t\tFrame length mismatch, going to default to N/As\n');
+                        varFrames = repmat({'N/A'},n_expected,1);
+                    end
+                    
+                    % Add a new leaf to the tree
+                    fds = kVIS_fdsAddTreeLeaf(fds, groupName, varNames, varNames, varUnits, varFrames, DAT, sensorNode, false);
+                end
+
             end
-            
-            % Check to see if the data is valid
-            if (max(DAT(:,1)) > 1e6)
-                % Data is bad
-                fprintf('\t\t\t\t\t\t  Channel corruption detected, removing bad points\n');
-                locs = find(DAT(:,1) < 1e6);
-                DAT = DAT(locs,:);
-            end
-            
-            % Add additional fields to certain groups
-            if (strcmp(groupName,'NKF1') || ...
-                    strcmp(groupName,'NKF6')   )
-                
-                varNames  = [ varNames', 'V', 'DistToHome']';
-                varUnits  = [ varUnits', 'm/s', 'm' ]';
-                varFrames = [ varFrames', {''}, {''}]';
-                
-                VN = DAT(:,strcmp(varNames,'VN'));
-                VE = DAT(:,strcmp(varNames,'VE'));
-                
-                PN = DAT(:,strcmp(varNames,'PN'));
-                PE = DAT(:,strcmp(varNames,'PE'));
-                
-                DAT = [ DAT, sqrt(VN.^2 + VE.^2), sqrt(PN.^2 + PE.^2)];
-                
-            end
-            
-            if (strcmp(groupName,'BAT'))
-                
-                varNames  = [ varNames', 'Power']';
-                varUnits  = [ varUnits', 'W' ]';
-                varFrames = [ varFrames', {''}]';
-                
-                V = DAT(:,strcmp(varNames,'Volt'));
-                I = DAT(:,strcmp(varNames,'Curr'));
-                
-                DAT = [ DAT, V.*I];
-                
-            end
-            
-            if (strcmp(groupName,'PSC'))
-                
-                varNames  = [ varNames', 'TV', 'V']';
-                varUnits  = [ varUnits', 'm/s', 'm/s']';
-                varFrames = [ varFrames', {''}, {''}]';
-                
-                TVX = DAT(:,strcmp(varNames,'TVX'));
-                TVY = DAT(:,strcmp(varNames,'TVY'));
-                VX  = DAT(:,strcmp(varNames,'VX'));
-                VY  = DAT(:,strcmp(varNames,'VY'));
-                
-                DAT = [ DAT, sqrt(TVX.^2 + TVY.^2), sqrt(VX.^2 + VY.^2)];
-                
-            end
-            
-            if (strcmp(groupName,'BARO') || strcmp(groupName,'BAR2') || strcmp(groupName,'BAR3'))
-                
-                varNames  = [ varNames', 'Rho']';
-                varUnits  = [ varUnits', 'kg/m3']';
-                varFrames = [ varFrames', {''}]';
-                
-                P = DAT(:,strcmp(varNames,'Press'));
-                T = DAT(:,strcmp(varNames,'Temp'));
-                rho = calcDensity(P,T);
-                
-                DAT = [ DAT, rho ];
-                
-            end
-            
-            % Add data to fds
-            if ~isempty(DAT)
-                t_start = min(t_start,DAT(1,1));
-                t_end   = max(t_end  ,DAT(end,1));
-                
-                % Add a new leaf to the tree
-                fds = kVIS_fdsAddTreeLeaf(fds, groupName, varNames, varNames, varUnits, varFrames, DAT, parentNode, false);
-            end
-            
         end
     end
 
@@ -253,7 +332,7 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
 end
 
 %% Break up sensor data that has an 'Id' feild
-fds = breakup_sensor_data(fds);
+%fds = breakup_sensor_data(fds);
 
 % Add vehicle data (if file found)
 if exist([pathstr,'\',name,'.m'],'file')
@@ -268,17 +347,23 @@ end
 
 
 %% Sort the fdata fields alphabetically
-[~,idx] = sort(fds.fdata(1,2:end));
-fds.fdata(:,2:end) = fds.fdata(:,idx+1);
+% There needs to be a more intelligent way of doing this
+% as it will break any references to parent nodes.  Currently
+% files import alphabetically so doesn't really matter.
+% [~,idx] = sort(fds.fdata(1,2:end));
+% fds.fdata(:,2:end) = fds.fdata(:,idx+1);
 
 %% Fix up the time so starts at t = 0
 fds.timeOffset = t_start; t_end = t_end - t_start;
 for ii = 2:numel(fds.fdata(1,:))
-    fds.fdata{fds.fdataRows.data,ii}(:,1) = fds.fdata{fds.fdataRows.data,ii}(:,1) - fds.timeOffset;
+    if numel(fds.fdata{fds.fdataRows.data,ii})
+        fds.fdata{fds.fdataRows.data,ii}(:,1) = fds.fdata{fds.fdataRows.data,ii}(:,1) - fds.timeOffset;
+    end
 end
 
 %% Add events based on flight mode changes
 % We can use MODE.ModeNum to work this out
+fprintf('Generating events based on MODE changes.\n');
 modeTimes   = kVIS_fdsGetChannel(fds, 'MODE','Time');
 modeNumbers = kVIS_fdsGetChannel(fds, 'MODE','ModeNum');
 modeReasons = kVIS_fdsGetChannel(fds, 'MODE','Rsn');
@@ -319,8 +404,13 @@ for ii = 1:numel(modeTimes)-1
         
         % TODO:  Need to work out if using Copter/Plane/Rover etc
         %        Defaulting to COPTER for now though
-        modeType = modes_ArduCopter(modeNumbers(ii));
-%         modeType = modes_ArduPlane(modeNumbers(ii));
+        if contains(fds.msg.MSG(1,:),'ArduCopter')
+            modeType = modes_ArduCopter(modeNumbers(ii));
+        elseif contains(fds.msg.MSG(1,:),'ArduPlane')
+            modeType = modes_ArduPlane(modeNumbers(ii));
+        else
+            modeType = sprintf('Mode %d',modeNumbers(ii));
+        end
         
         % Fill out eList
         eventNumber = eventNumber+1;
@@ -334,8 +424,9 @@ for ii = 1:numel(modeTimes)-1
 end
 
 % Add eList to eventList
-fds.eventList = eList;
-
+if exist('eList','var')
+   fds.eventList = eList;
+end
 
 %% All done!
 fprintf('\nImport took %.2f s\n',toc);

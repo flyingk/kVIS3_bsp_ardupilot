@@ -29,7 +29,7 @@ fprintf('Export csv files to %s ... ',folder_name);
 for ii = 2:size(fds.fdata,2)
     % Initialise the table
     T = table();
-    
+        try
     % Read in the data
     sensor = fds.fdata{1,ii};
     varNames = fds.fdata{2,ii};
@@ -42,12 +42,17 @@ for ii = 2:size(fds.fdata,2)
         variable_names{jj} = [varNames{jj}, ' (', units{jj}, ')'];
         T.(varNames{jj}) = data_out(:,jj);
     end
+
+
     
     T.Properties.VariableUnits = units;
 %     T.Properties.VariableNames = variable_names; % it doesn't like this
     
     % Write the table to a csv
     writetable(T,[folder_name,'/',sensor,'.csv'],'Delimiter',',') 
+    catch
+        fprintf('Skipping %s\n',sensor);
+    end
 
 end
 
