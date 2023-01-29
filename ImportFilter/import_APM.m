@@ -331,6 +331,9 @@ for ii = 1:numel(data_stream_names) % change to a 1 later
     
 end
 
+% Update the fds attributes
+fds = kVIS_fdsUpdateAttributes(fds);
+
 %% Break up sensor data that has an 'Id' feild
 %fds = breakup_sensor_data(fds);
 
