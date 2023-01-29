@@ -348,7 +348,6 @@ elseif exist([pathstr,'\flight_info.m'],'file')
     
 end
 
-
 %% Sort the fdata fields alphabetically
 % There needs to be a more intelligent way of doing this
 % as it will break any references to parent nodes.  Currently
@@ -356,12 +355,23 @@ end
 % [~,idx] = sort(fds.fdata(1,2:end));
 % fds.fdata(:,2:end) = fds.fdata(:,idx+1);
 
-%% Fix up the time so starts at t = 0
+%% Fix time stamping
+
 fds.timeOffset = t_start; t_end = t_end - t_start;
-for ii = 2:numel(fds.fdata(1,:))
-    if numel(fds.fdata{fds.fdataRows.data,ii})
-        fds.fdata{fds.fdataRows.data,ii}(:,1) = fds.fdata{fds.fdataRows.data,ii}(:,1) - fds.timeOffset;
+for ii = 1:numel(fds.fdata(1,:))
+
+    % Skip if this is a data header
+    if isempty(fds.fdata{fds.fdataRows.data,ii})
+        continue
     end
+
+    % Fix up the time so starts at t = 0
+    fds.fdata{fds.fdataRows.data,ii}(:,1) = fds.fdata{fds.fdataRows.data,ii}(:,1) - fds.timeOffset;
+
+    % Fix anything time less than 0, was likely and nan before  
+    idx = (fds.fdata{fds.fdataRows.data,ii}(:,1)) < 0.0;
+    fds.fdata{fds.fdataRows.data,ii}(idx,1) = 0;
+
 end
 
 %% Add events based on flight mode changes
