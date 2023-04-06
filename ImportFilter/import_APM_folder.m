@@ -28,7 +28,7 @@ files = dir([root_directory,'\**\*.bin']);
 for ii = 1:numel(files)
     
     %% Import APM File
-    file = [files(ii).folder,'\',files(ii).name];
+    file = fullfile(files(ii).folder,files(ii).name);
     [pathstr,name,ext] = fileparts(file);
     fprintf('%d / %d : Processing %s\n',ii,length(files),file);
     

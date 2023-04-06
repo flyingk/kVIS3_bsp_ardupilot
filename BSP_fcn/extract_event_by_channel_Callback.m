@@ -4,36 +4,55 @@ function extract_event_by_channel_Callback(hObject, ~)
 
 clear_existing_events = 1;
 
-handles = guidata(hObject);
+% handles = guidata(hObject);
 
 
-[currentVal, currentName, noOfEntries, str] = kVIS_dataSetListState(hObject)
+[fds, names, ~] = kVIS_getAllFds(hObject);
+
+prompts = {'Group','Channel','High Value', 'Event Start Offset [ s ]'};
+dlgtitle = 'Extract Events';
+dims = [ 1 35 ];
+definput = {'RCIN','C6', '1700', '0.0'};
+
+answer = inputdlg(prompts,dlgtitle,dims,definput);
+
+if isempty(answer)
+    fprintf('Input cancelled\n');
+    return;
+end
+
+group = answer{1};
+channel = answer{2};
+highVal = str2double(answer{3});
+startOffset = str2double(answer{4});
 
 
-fds = kVIS_getCurrentFds(hObject);
-
-% kVIS_updateEventList(hObject, fds.eventList, false);
-
-for ii = 1:noOfEntries
+% Loop through the fds files
+for ii = 1:numel(fds)
 
     % Extract channel
     fprintf('Generating events based on RCIN changes.\n');
-    times   = kVIS_fdsGetChannel(fds, 'RCIN','Time');
-    channel = kVIS_fdsGetChannel(fds, 'RCIN','C6');
+    times   = kVIS_fdsGetChannel(fds{ii}, group,'Time');
+    values = kVIS_fdsGetChannel(fds{ii}, group, channel);
 
     in = [];
     out = [];
 
     % Loop through and capture times when channel was above 1200
-    idx = find(channel > 1700);
+    idx = find(values > highVal);
+
+    if isempty(idx)
+        fprintf('\tNo events found for fds %d\n',ii);
+        continue
+    end
 
     in(1) = idx(1);
 
     for jj = 2:numel(idx)
         if idx(jj) - idx(jj-1) > 1
             % We had a toggle of the channel
-            out(end+1) = jj-1;
-            in(end+1) = jj;
+            out(end+1) = idx(jj-1);
+            in(end+1) = idx(jj);
         end
     end
 
@@ -44,27 +63,29 @@ for ii = 1:noOfEntries
 
     % Get the times and fill eList
     eventNumber = 0;
+    eList = [];
+
     for jj = 1:numel(in)
 
             % Fill out eList
             eventNumber = eventNumber+1;
-            eList(eventNumber).type = 'Ch6 High';
-            eList(eventNumber).start= times(in(jj))-2;
+            eList(eventNumber).type = [channel, ' High'];
+            eList(eventNumber).start= times(in(jj))+startOffset;
             eList(eventNumber).end  = times(out(jj));
-            eList(eventNumber).description = 'Ch6 High';
+            eList(eventNumber).description = [channel, ' High'];
             eList(eventNumber).plotDef='';
 
     end
 
     % Concatenate the eLists
     if (clear_existing_events)
-        fds.eventList = eList;
+        fds{ii}.eventList = eList;
     else
-        fds.eventList = [fds.eventList,eList];
+        fds{ii}.eventList = [fds{ii}.eventList,eList];
     end
 
     % Update data sets
-    kVIS_updateEventList(hObject, fds.eventList, false);
+    kVIS_updateDataSet(hObject, fds{ii}, names{ii});
  
 end
 
