@@ -428,40 +428,41 @@ modeReasons(end+1) = modeReasons(end);
 
 % Loop through modeTimes and store data
 eventNumber = 0;
-% for ii = 1:numel(modeTimes)-1
-%     % Get info
-%     t_in  = modeTimes(ii);
-%     t_out = modeTimes(ii+1);
-%     
-%     % Check if change was valid
-%     if t_out-t_in > 1.0
-%         
-%         try
-%             modeReason = modes_Reason(modeReasons(ii));
-%         catch
-%             modeReason = 'Unknown';
-%         end
-%         
-%         % TODO:  Need to work out if using Copter/Plane/Rover etc
-%         %        Defaulting to COPTER for now though
-%         if contains(fds.msg.MSG(1,:),'ArduCopter')
-%             modeType = modes_ArduCopter(modeNumbers(ii));
-%         elseif contains(fds.msg.MSG(1,:),'ArduPlane')
-%             modeType = modes_ArduPlane(modeNumbers(ii));
-%         else
-%             modeType = sprintf('Mode %d',modeNumbers(ii));
-%         end
-%         
-%         % Fill out eList
-%         eventNumber = eventNumber+1;
-%         eList(eventNumber).type = modeType;
-%         eList(eventNumber).start= t_in;
-%         eList(eventNumber).end  = t_out;
-%         eList(eventNumber).description = modeReason;
-%         eList(eventNumber).plotDef='';
-%     end
-%         
-% end
+
+for ii = 1:numel(modeTimes)-1
+    % Get info
+    t_in  = modeTimes(ii);
+    t_out = modeTimes(ii+1);
+    
+    % Check if change was valid
+    if t_out-t_in > 1.0
+        
+        try
+            modeReason = modes_Reason(modeReasons(ii));
+        catch
+            modeReason = 'Unknown';
+        end
+        
+        % TODO:  Need to work out if using Copter/Plane/Rover etc
+        %        Defaulting to COPTER for now though
+        if contains(fds.msg.MSG(1,:),'ArduCopter')
+            modeType = modes_ArduCopter(modeNumbers(ii));
+        elseif contains(fds.msg.MSG(1,:),'ArduPlane')
+            modeType = modes_ArduPlane(modeNumbers(ii));
+        else
+            modeType = sprintf('Mode %d',modeNumbers(ii));
+        end
+        
+        % Fill out eList
+        eventNumber = eventNumber+1;
+        eList(eventNumber).type = modeType;
+        eList(eventNumber).start= t_in;
+        eList(eventNumber).end  = t_out;
+        eList(eventNumber).description = modeReason;
+        eList(eventNumber).plotDef='';
+    end
+        
+end
 
 % Add eList to eventList
 if exist('eList','var')
