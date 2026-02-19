@@ -22,13 +22,18 @@ function [] = import_APM_folder(hObject, ~)
 
 %% Select APM Log folder
 root_directory = uigetdir(pwd,'Import APM Folder');
+
+if (root_directory == 0)
+    return;
+end
+
 files = dir([root_directory,'\**\*.bin']);
 
 % Import each file
 for ii = 1:numel(files)
     
     %% Import APM File
-    file = [files(ii).folder,'\',files(ii).name];
+    file = fullfile(files(ii).folder,files(ii).name);
     [pathstr,name,ext] = fileparts(file);
     fprintf('%d / %d : Processing %s\n',ii,length(files),file);
     

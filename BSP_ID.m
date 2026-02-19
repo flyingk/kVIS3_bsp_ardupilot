@@ -44,7 +44,8 @@ BSP_Info.mapChannels = {};
 
 BSP_Info.aircraftVisualModelFile = '';
 
-BSP_Info.customTabs = {};
+BSP_Info.customTabs = {};%{'Param','',''};
 
-BSP_Info.addOns = {'Create SIDPAC file','','fill_fdata_Callback'};
+BSP_Info.addOns = {'Create SIDPAC file','','fill_fdata_Callback';
+                   'Extract Event by Channel','','extract_event_by_channel_Callback'};
 
