@@ -51,11 +51,11 @@ log = log.getStruct();
 [pathstr,name,ext] = fileparts(file);
 
 %% get new fds structure
-fds = kVIS_fdsInitNew();
+fds = kVIS_fdsInitNew('Ardupilot_Dataset');
 
 fds.BoardSupportPackage = 'ArduPilot';
 
-[fds, rootNode] = kVIS_fdsAddTreeBranch(fds, 0, 'APM_Data');
+[fds, rootNode] = kVIS_fdsAddTreeBranch(fds, 'Ardupilot_Dataset', 'Flight_Data');
 
 %% read data
 data_stream_names = fieldnames(log);
@@ -357,7 +357,7 @@ end
 % Update the fds attributes
 fds = kVIS_fdsUpdateAttributes(fds);
 
-%% Break up sensor data that has an 'Id' feild
+%% Break up sensor data that has an 'Id' field
 %fds = breakup_sensor_data(fds);
 
 % Add vehicle data (if file found)
