@@ -46,6 +46,7 @@ BSP_Info.aircraftVisualModelFile = '';
 
 BSP_Info.customTabs = {};%{'Param','',''};
 
-BSP_Info.addOns = {'Create SIDPAC file','','fill_fdata_Callback';
+BSP_Info.addOns = {'Create flight analysis group','','Create_flight_analysis_group';
+                   'Create SIDPAC file','','fill_fdata_Callback';
                    'Extract Event by Channel','','extract_event_by_channel_Callback'};
 

@@ -37,9 +37,12 @@ end
 %% Import File
 fds = import_APM(file);
 
-%% Update KSID
+%% Update kVIS
 fds = kVIS_fdsUpdateAttributes(fds);
 kVIS_addDataSet(hObject, fds, matlab.lang.makeValidName(name));
+
+% ask for aircraft data
+kVIS_menuEditAircraftData_Callback(hObject, []);
 
 return
 
